@@ -1,0 +1,55 @@
+\documentclass[hyperref,UTF8]{article}
+\usepackage{hyperref}
+\usepackage{ctex}
+\usepackage{subfigure}
+\usepackage{geometry}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage[ruled]{algorithm2e}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{tikz}
+
+\setCJKmainfont[BoldFont=FZHei-B01S, ItalicFont=FZKai-Z03S]{FZShuSong-Z01S}
+\setCJKmonofont{FZFangSong-Z02S}
+\setCJKsansfont{FZKai-Z03S}
+\ziju{0.06} % 字间距
+
+\geometry{a4paper,scale=0.8}
+
+\setitemize[1]{itemsep=0pt,partopsep=0pt,parsep=\parskip,topsep=5pt}
+\setenumerate[1]{itemsep=0pt,partopsep=0pt,parsep=\parskip,topsep=5pt}
+
+\hypersetup{
+  colorlinks=false,
+  pdfborder=0 0 0
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  numbers=left,numberstyle=\ttfamily\small,
+  columns=fullflexible,
+  %xleftmargin=\parindent,
+  commentstyle=\color{green!50!black}\itshape,
+  keywordstyle=\color{cyan!50!black}\bfseries,
+  stringstyle=\color{purple},
+  numberstyle=\ttfamily\color{gray},
+}
+
+\usetikzlibrary{automata,positioning,topaths,arrows}
+
+\newtheorem{gestrule}{规则}[section]
+\newtheorem{gestdefine}{定义}[section]
+
+\begin{document}
+
+\title{C++ 极简入门}
+\author{Skiars}
+
+{\bfseries\maketitle}
+
+\setcounter{tocdepth}{2}
+\tableofcontents
+
+\end{document}
