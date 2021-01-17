@@ -84,11 +84,134 @@ C++ 是一种从实际工程需求出发的语言，
 
 \section{基础知识}
 
+\subsection{引用}
+
+\textbf{引用}是对象的别名，通过下面的方法将变量声明为引用：
+\begin{lstlisting}[language=c++]
+int v = 5;
+int &r = v;
+\end{lstlisting}
+第 2 行的 \texttt{r} 就是一个引用：它是变量 \texttt{v} 的别名。在变量的声明前加一个 \texttt{\&} 符号定义引用，如上面的 \texttt{\&r}。引用只能在初始化时和变量绑定，此后引用不能再绑定其他变量。
+
+由于引用是变量的别名，对引用赋值会修改绑定变量的值：
+\begin{lstlisting}[language=c++]
+r = 1;           // 通过引用 r 对变量 v 赋值
+printf("%d", v); // v 的值是 1
+\end{lstlisting}
+与指针类似，我们可以定义常量引用：
+\begin{lstlisting}[language=c++]
+const int &r2 = v;
+\end{lstlisting}
+这样我们就只能通过 \texttt{r2} 读取 \texttt{v} 而不能进行修改。引用本质上是非空指针常量的语法糖，与指针常量不一样，使用引用不需要进行解指针运算，在一些函数参数上使用引用非常方便：
+\begin{lstlisting}[language=c++]
+// 直接传值
+bool func_val(struct test_s p) {
+    return p ? p.mem != 0 ? false;
+}
+// 传指针，指针需要判空，由于不修改参数而使用常量指针
+bool func_ptr(const struct test_s *p) {
+    return p ? p->mem != 0 ? false;
+}
+// 传引用，由于不修改参数而使用常量引用
+bool func_ref(const struct test_s &p) {
+    return p.mem != 0;
+}
+struct test_s obj;
+func_val(obj);  // 直接将 obj 作为实参传递
+func_ptr(&obj); // 将 obj 的地址作为实现传递
+func_ref(obj); // 将 obj 绑定到引用参数
+\end{lstlisting}
+上面的三个函数都不会修改对象 \texttt{obj} 的值，但是传值的版本会发生结构体的值拷贝，另外两个则不会。为了避免拷贝开销，在 C 语言中函数的结构体参数一般使用指针（并且尽量使用常量指针确保无副作用），C++ 中则更推荐使用引用。下面的例子将说明使用引用作为函数参数比指针更为直观：
+\begin{lstlisting}[language=c++]
+long read_file_ref(char* &p, const char *path) {
+    long size = -1;
+    FILE *fp = fopen(path, "r");
+    if (fp) {
+        size = get_file_size(fp);
+        p = malloc(size + 1);
+        size = fread(p, 1, size, fp);
+        p[size] = '\0';
+    }
+    return size;
+}
+long read_file_ptr(char* *p, const char *path) {
+    long size = -1;
+    FILE *fp = fopen(path, "r");
+    if (fp) {
+        size = get_file_size(fp);
+        *p = malloc(size + 1);
+        size = fread(p, 1, size, fp);
+        (*p)[size] = '\0';
+    }
+    return size;
+}
+// 传引用版本的使用方式
+char *data = NULL;
+long size = read_file_ref(data, "file path");
+// 传指针版本的使用方式
+char *data = NULL;
+long size = read_file_ref(&data, "file path");
+\end{lstlisting}
+这两个函数的作用都是读取指针文件并返回文件的长度，其中读取到的内容通过参数 \texttt{p} 返回，我们发现传递引用版本的函数在使用 \texttt{p} 的时候少一次解指针运算，可以减少心智负担（事实是多重指针在复杂场合下确实容易出错）。
+
 \subsection{函数重载}
 
-\section{作用域和命名空间} \label{sec:scope}
+在 C++ 中，我们可以定义一组同名的函数，只要保证参数数量或参数类型各不相同，例如：
+\begin{lstlisting}[language=c++]
+int max(int a, int b);
+int max(int a, int b, int c);
+double max(double a, double b);
+\end{lstlisting}
+最直接的，重载函数减轻了为函数起名字的负担。需要注意的是，通过区分参数指针或引用指向的对象是常量还是非常量是可以实现函数重载的：
+\begin{lstlisting}[language=c++]
+int max(Node &a, Node &b);
+int max(const Node &a, const Node &b); // 新的重载函数
+\end{lstlisting}
 
+在调用重载函数时，编译器会通过实参数量和类型判断到底调用哪一个版本。
 
+\subsection{默认实参}
+
+\subsection{作用域和命名空间} \label{sec:scope}
+
+为了避免全局名字重复，我们一般会将全局对象的名字定义的比较长并且特殊，C++ 中引入了命名空间来缓解这种问题：
+\begin{lstlisting}[language=c++]
+namespace utils {
+    int max(int a, int b);
+} // 命名空间结束不需要分号
+\end{lstlisting}
+命名空间可以在多处定义，加入上面的 \texttt{utils} 命名空间已经定义过，这里的定义会把 \texttt{max} 名字添加到现有的命名空间中。每个命名空间都是一个作用域，就像一个块或者函数一样。通过\textbf{作用域运算符 \texttt{::}} 可以访问命名空间内部的名字：
+\begin{lstlisting}[language=c++]
+utils::max(1, 2);
+\end{lstlisting}
+作用域运算符在其他很多场合也有用，例如类或者结构体，和成员运算符 \texttt{.} 或者 \texttt{->} 不同，作用域运算符只能静态使用：
+\begin{lstlisting}[language=c++,numbers=none]
+块名称 :: 属性名称
+\end{lstlisting}
+
+\subsection{初始化和赋值}
+
+定义变量时一般会给变量一个初始值，这个过程称为\textbf{初始化}：
+\begin{lstlisting}[language=c++]
+int n1 = 10;   // 使用 = 运算符初始化（不是赋值）
+int n2(v - 1); // 通过构造函数初始化
+int n3();      // 使用默认值初始化
+\end{lstlisting}
+第一种初始化是和 C 语言相同的初始化方式，既使用 \texttt{=} 运算符初始化，后面两种则是 C++ 引入的初始化方式：通过构造函数初始化。
+
+构造函数将在 \ref{sec:constructor} 节介绍，这里我们要指出：所有内置类型都可以通过构造函数来初始化，也就是这种方式：
+\begin{lstlisting}[language=c++]
+int v1(), v2(1); // 默认构造函数将 v1 初始化为 0
+bool b1(), b2(true); // bool 类型的默认构造函数将 bool 对象初始化为 false
+bool b3 = bool(true); // 构造一个临时的 bool 对象初始化 b3
+\end{lstlisting}
+
+除了初始化以外，使用\textbf{赋值运算符 \texttt{=}} 对变量进行\textbf{赋值}：
+\begin{lstlisting}[language=c++]
+n1 = 1; // 赋值
+n1 = n2 = int(2); // n1 和 n2 都被赋值为 2
+\end{lstlisting}
+赋值运算符的左侧必须是变量，右侧为和左侧变量相同类型的表达式（或者可以隐式转换为相同类型），且赋值运算符是右结合的。
 
 \section{类}
 
@@ -103,7 +226,7 @@ public:
 private:
     short _x, _y;
 };
-Point p;   // 定义Point对象p
+Point p;   // 定义 Point 对象 p
 p.setX(2); // 正确
 p._x = 3;  // 编译报错（私有成员在类外部不可见）
 \end{lstlisting}
@@ -144,13 +267,13 @@ const int x = 1;
 \end{lstlisting}
 很显然不能在定义 \texttt{x} 变量之后修改它的值。现在我们看 C++ 的例子：
 \begin{lstlisting}[language=c++]
-int length(const Point *p) {
-  return (int)sqrt(p->x() * p->x() + p->y() * p->y());
+int length(const Point &p) {
+  return int(sqrt(p.x() * p.x() + p.y() * p.y()));
 }
 Point p;
 p.setX(3);
 p.setY(4);
-length(&p); // 应该返回 5
+length(p); // 应该返回 5
 \end{lstlisting}
 \texttt{length} 函数用于求二维向量的长度，这个函数不需要修改参数 \texttt{p} 的值（不修改它的数据成员），因此将参数 \texttt{p} 加上了 \texttt{const} 修饰。不过上面的代码编译会报错，原因在于：虽然 \texttt{Point::x()} 和 \texttt{Point::y()} 虽然事实上不修改 \texttt{Point} 对象的值，但是编译器并不知道。我们可以将上述成员函数的定义后加上 \texttt{const} 关键字以指出此成员函数不会修改对象（此时 \texttt{this} 指针是 \texttt{const Point* const} 类型）：
 \begin{lstlisting}[language=c++]
@@ -161,11 +284,18 @@ public:
     // ...
 };
 \end{lstlisting}
-这种成员函数称为\textbf{常量成员函数}。如果可以，应尽量定义常量成员函数。
+这种成员函数称为\textbf{常量成员函数}。如果可能，应尽量定义常量成员函数。类中相同名称的普通成员函数和常量成员函数可以重载：
+\begin{lstlisting}[language=c++]
+class Buffer {
+public:
+    char* data();             // 非常量成员函数的重载版本，可能会修改 Buffer 对象
+    const char* data() const; // 常量成员函数版本，不会修改 Buffer 对象
+    // ...
+};
+\end{lstlisting}
+对于常量对象或常量对象的指针或引用，优先调用常量成员函数的重载版本，而对于非常量对象或它的指针或引用则优先匹配非常量成员函数的重载版本。
 
-\subsubsection{\texttt{const} 成员函数}
-
-\subsection{构造函数和析构函数}
+\subsection{构造和析构} \label{sec:constructor}
 
 类使用称为\textbf{构造函数}的成员函数定义对象的初始化方式。类被创建时总会调用构造函数。构造函数的名字和类名相同，没有返回类型，并可能有零到多个参数列表。一个类可以具有多个构造函数，不同构造函数的参数类型或者数量必须不同。构造函数不能声明为 \texttt{const} 的。
 
@@ -191,9 +321,29 @@ public:
 \end{lstlisting}
 在冒号和花括号之间的代码就是初始值列表。
 
+\paragraph{默认构造函数} 如果不定义任何构造函数，编译器会自动生成一个默认的构造函数，这个构造函数会默认初始化类中的成员变量（C++11 还引入了类内初始值）。某些原因会导致不能使用默认的构造函数。
+
+\subsubsection{析构函数}
+
+当对象的生命周期结束时会调用类的析构函数以执行自定义的销毁动作，对于 \texttt{Point} 类来说，使用编译器生成的默认析构函数就可以了（什么也不做）。但是假设我们实现了一个 \texttt{File} 类，我们应该在析构函数中关闭文件句柄。析构函数的定义如下：
+\begin{lstlisting}[language=c++]
+class File {
+public:
+    ~File() { if (!isOpened()) fclose(_fp); }
+    // ...
+private:
+    FILE *_fp;
+};
+\end{lstlisting}
+与构造函数不同，析构函数的函数名前有一个 \texttt{\textasciitilde} 符号。
+
+\subsubsection{拷贝和赋值}
+
 \subsection{运算符重载}
 
 \subsection{继承}
+
+\subsection{运行时多态}
 
 \section{内存管理}
 
