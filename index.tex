@@ -170,6 +170,33 @@ int max(const Node &a, const Node &b); // 新的重载函数
 
 在调用重载函数时，编译器会通过实参数量和类型判断到底调用哪一个版本。
 
+\subsubsection{重载运算符} \label{sec:overloaded_operator}
+
+可以通过重载运算符自定义特定运算符的行为。重载的运算符是名字为 \textbf{\texttt{operator}} 关键字后跟运算符的函数：
+\begin{lstlisting}[language=c++]
+Complex operator+(const Complex &lhs, double rhs) {
+    return Complex(lhs.real + rhs, lhs.imag);
+}
+Complex c1(1, 2);    // c1 == 1 + 2i
+Complex c2 = c1 + 3; // c2 == 4 + 2i
+\end{lstlisting}
+这里通过重载加法运算符实现了复数和实数的加法运算。和重载函数类似，编译器会通过操作数的类型来匹配合适的运算符重载函数。
+
+对于自增和自减运算符，通过下面的方法来区分前缀和后缀版本：
+\begin{lstlisting}[language=c++]
+// 前缀版本
+char* operator++(char *p) {
+    return p + 1;
+}
+// 后缀版本，多了一个不使用的 int 参数
+char* operator++(char *p, int) {
+    char *tmp = p;
+    p += 1;
+    return tmp;
+}
+\end{lstlisting}
+另外，逻辑与和逻辑或运算符也可以重载，但是无法实现\textbf{短路求值}规则。
+
 \subsection{默认实参}
 
 \subsection{作用域和命名空间} \label{sec:scope}
@@ -230,7 +257,7 @@ Point p;   // 定义 Point 对象 p
 p.setX(2); // 正确
 p._x = 3;  // 编译报错（私有成员在类外部不可见）
 \end{lstlisting}
-\texttt{Point} 类用于表示二维平面中的点，在 GUI 等场合中非常常见。这个例子中我们分别实现了设置和获取 $(x, y)$ 坐标的方法，这些方法处于 \texttt{public} 说明符下，因此外部代码可以访问和调用，而坐标数据则存储在 \texttt{private} 说明符下，只有 \texttt{Point} 类内部可以访问。这里我们故意将坐标存储为 \texttt{short} 类型（常见的 GUI 坐标使用 \texttt{short} 完全足够），这样和使用 C 结构体相比，有以下好处：
+\texttt{Point} 类用于表示二维平面中的点，在 GUI 框架中非常常见，\texttt{Point} 类也是贯穿本节的例子。这个例子中我们分别实现了设置和获取 $(x, y)$ 坐标的方法，这些方法处于 \texttt{public} 说明符下，因此外部代码可以访问和调用，而坐标数据则存储在 \texttt{private} 说明符下，只有 \texttt{Point} 类内部可以访问。这里我们故意将坐标存储为 \texttt{short} 类型（常见的 GUI 坐标使用 \texttt{short} 完全足够），这样和使用 C 结构体相比，有以下好处：
 \begin{itemize}
   \item 坐标存储为 \texttt{short} 类型，节约空间；
   \item \texttt{x()}，\texttt{setX()} 方法操作的类型都是 \texttt{int}，使用上比较通用（乘法运算时 \texttt{short} 有溢出风险，并且人们更习惯 \texttt{int}）；
@@ -249,7 +276,7 @@ public:
 };
 int Point::x() { return _x; }
 \end{lstlisting}
-第 6 行在 \texttt{Point} 定义的外部定义了 \texttt{Point::x} 成员函数。\texttt{::} 为作用域运算符，在 \ref{sec:scope} 节会说明。
+第 6 行在 \texttt{Point} 定义的外部定义了 \texttt{Point::x} 成员函数。\texttt{::} 为作用域运算符，在 \ref{sec:scope} 节做过说明。
 
 \subsubsection{\texttt{this} 指针}
 
@@ -323,9 +350,19 @@ public:
 
 \paragraph{默认构造函数} 如果不定义任何构造函数，编译器会自动生成一个默认的构造函数，这个构造函数会默认初始化类中的成员变量（C++11 还引入了类内初始值）。某些原因会导致不能使用默认的构造函数。
 
+\paragraph{拷贝构造函数} 使用一个对象来\CJKunderdot{初始化}另一个同类对象时会调用拷贝构造函数执行初始化，如果没有显式定义，编译器会生成默认的拷贝构造函数（依次拷贝所有成员）。拷贝构造函数的参数是一个相同类型的对象或者引用：
+\begin{lstlisting}[language=c++]
+class Point {
+public:
+    Point(const Point &point) : _x(point._x), _y(point._y) {}
+    // ...
+};
+\end{lstlisting}
+对于 \texttt{Point} 类来说，使用默认的拷贝构造函数就足够了。但是某些情况下则必须自己定义拷贝构造函数，比如类的成员有指向动态内存的指针时，编默认的拷贝构造函数只会复制指针的值而不会复制指针所指向的内容。
+
 \subsubsection{析构函数}
 
-当对象的生命周期结束时会调用类的析构函数以执行自定义的销毁动作，对于 \texttt{Point} 类来说，使用编译器生成的默认析构函数就可以了（什么也不做）。但是假设我们实现了一个 \texttt{File} 类，我们应该在析构函数中关闭文件句柄。析构函数的定义如下：
+当对象的生命周期结束时会调用类的\textbf{析构函数}以执行自定义的销毁动作，对于 \texttt{Point} 类来说，使用编译器生成的默认析构函数就可以了（什么也不做）。但是假设我们实现了一个 \texttt{File} 类，我们应该在析构函数中关闭文件句柄。析构函数的定义如下：
 \begin{lstlisting}[language=c++]
 class File {
 public:
@@ -337,9 +374,48 @@ private:
 \end{lstlisting}
 与构造函数不同，析构函数的函数名前有一个 \texttt{\textasciitilde} 符号。
 
-\subsubsection{拷贝和赋值}
-
 \subsection{运算符重载}
+
+和 \ref{sec:overloaded_operator} 节类似，我们可以将运算符重载函数作为类的成员函数，不过需要省略第一个操作数参数（第一个操作数为对象本身）：
+\begin{lstlisting}[language=c++]
+class Point {
+public:
+    Point operator+(const Point &rhs) { return Point(_x + rhs._x, _y + rhs.y); }
+    // ..
+};
+\end{lstlisting}
+这样就可以使用加法运算符计算两个 \texttt{Point} 对象的向量和了：
+\begin{lstlisting}[language=c++]
+Point p = Point(1, 2) + Point(3, 4); // p == Point(4, 6)
+\end{lstlisting}
+
+当然，我们也可以在类外部重载运算符，就和 \ref{sec:overloaded_operator} 节一样：
+\begin{lstlisting}[language=c++]
+Point operator+(const Point &lhs， const Point &rhs) {
+    return Point(lhs.x() + rhs.x(), lhs.y() + rhs.y());
+}
+\end{lstlisting}
+一个明显的区别是，类外部定义的运算符重载函数不能访问类的私有变量。
+
+\paragraph{赋值运算符}
+
+可以通过定义赋值运算符重载函数来替换编译器实现的默认版本：
+\begin{lstlisting}[language=c++]
+class Point {
+public:
+    Point& operator=(const Point &rhs) {
+        _x = rhs._x;
+        _y = rhs._y;
+        return *this;
+    }
+    // ...
+};
+\end{lstlisting}
+由于和默认版本的行为相同，这里没必要显示地重载 \texttt{Point} 类的赋值运算符。但是对于诸如包含指向动态内存指针成员的类，我们需要自己重载赋值运算符，这和拷贝构造函数的情况类似。因此很多场景下，需要实现拷贝构造函数的类也需要重载赋值运算符——前者负责对象初始化，后者负责对象赋值。
+
+\subsection{静态成员}
+
+\subsection{访问控制}
 
 \subsection{继承}
 
@@ -348,6 +424,57 @@ private:
 \section{内存管理}
 
 \section{模板和标准库}
+
+\section{重要的开发技术}
+
+\subsection{RAII 机制}
+
+假设我们针对某种操作系统封装了一个互斥量类：
+\begin{lstlisting}[language=c++]
+class Mutex {
+public:
+    Mutex();
+    void lock();
+    void unlock();
+};
+\end{lstlisting}
+互斥量用于保证多个线程安全地访问共享资源，在每个线程访问全局资源前要通过 \texttt{lock} 方法锁住互斥量，而访问结束后通过 \texttt{unlock} 解锁互斥量：
+\begin{lstlisting}[language=c++]
+Mutex g_mutex;
+// 这个函数可能在多个线程中执行
+bool some_func() {
+    g_mutex.lock(); // 锁住互斥量
+    // 执行访问全局资源的逻辑
+    g_mutex.unlock(); // 解锁互斥量
+    return true;
+}
+\end{lstlisting}
+但是这样做有一个问题：如果第 5 行的逻辑中出现了任何返回语句将导致互斥锁不会被解锁，从而造成死锁（对于已经打开的文件，动态分配的内存有同样的情况）。这就要求我们必须小心对待这种代码，对于维护者也是。但是通过 C++ 的一种特定我们完全可以从语言层面保证加锁的互斥量一定解锁：
+\begin{itemize}
+  \item 对象构造时一定会调用构造函数，对象销毁时一定会调用析构函数；
+  \item 栈上定义的对象在初始化时调用构造函数，离开作用域（当前块）时销毁。
+\end{itemize}
+利用这一点我们可以实现\textbf{资源获取既初始化}（\textbf{RAII}）。我们来看怎样修改 \texttt{Mutex} 的使用方式：
+\begin{lstlisting}[language=c++]
+class MutexLocker {
+public:
+    // 构造函数调用时锁住互斥量
+    MutexLocker(Mutex &mutex) : _mutex(mutex) { _mutex.lock(); }
+    // 析构函数调用时解锁互斥量
+    ~MutexLocker() { _mutex.unlock(); }
+private:
+    Mutex &_mutex;
+}
+Mutex g_mutex;
+// 这个函数可能在多个线程中执行
+bool some_func() {
+    MutexLocker locker(g_mutex); // 初始化时会调用 MutexLocker 的构造函数锁住 g_mutex
+    // 执行访问全局资源的逻辑
+    // 函数作用域结束时（在这里是复函数返回）解锁 g_mutex
+    return true;
+}
+\end{lstlisting}
+上面的例子定义了一个 \texttt{MutexLocker} 来保证互斥锁加锁后一定会释放，无论我们怎么修改 14 行的逻辑都能够保证这一点（当然不能手动调用 \texttt{g\_mutex.unlock()}）。
 
 \bibliography{references}
 
