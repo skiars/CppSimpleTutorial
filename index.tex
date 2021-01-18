@@ -1,15 +1,11 @@
 \documentclass[hyperref,UTF8]{article}
 \usepackage{hyperref}
 \usepackage{ctex}
-\usepackage{subfigure}
 \usepackage{geometry}
-\usepackage{amsmath}
-\usepackage{mathtools}
-\usepackage[ruled]{algorithm2e}
 \usepackage{enumitem}
 \usepackage{listings}
-\usepackage[dvipsnames]{xcolor}
-\usepackage{tikz}
+\usepackage{titlesec}
+\usepackage{xcolor}
 
 \setCJKmainfont[BoldFont=FZHei-B01S, ItalicFont=FZKai-Z03S]{FZShuSong-Z01S}
 \setCJKmonofont{FZFangSong-Z02S}
@@ -18,8 +14,14 @@
 
 \geometry{a4paper,scale=0.8}
 
-\setitemize[1]{itemsep=0pt,partopsep=0pt,parsep=\parskip,topsep=5pt}
-\setenumerate[1]{itemsep=0pt,partopsep=0pt,parsep=\parskip,topsep=5pt}
+% title and context interval
+\titlespacing*{\section}{0pt}{2ex}{0.5ex}
+\titlespacing*{\subsection}{0pt}{1ex}{0.5ex}
+\titlespacing*{\subsubsection}{0pt}{1ex}{0.5ex}
+\titlespacing{\paragraph}{0pt}{1.5ex minus .1ex}{1pc}
+
+\setitemize[1]{itemsep=0pt,partopsep=0pt,parsep=\parskip,topsep=4pt}
+\setenumerate[1]{itemsep=0pt,partopsep=0pt,parsep=\parskip,topsep=4pt}
 
 \hypersetup{
   colorlinks=false,
@@ -30,14 +32,22 @@
   basicstyle=\ttfamily\small,
   numbers=left,numberstyle=\ttfamily\small,
   columns=fullflexible,
-  %xleftmargin=\parindent,
+  breakatwhitespace=false,
+  captionpos=b,               % sets the caption-position to bottom
+  breaklines=true,            % automatic line breaking only at whitespace
+  keepspaces=true,
+  showstringspaces=false,
   commentstyle=\color{green!50!black}\itshape,
   keywordstyle=\color{cyan!50!black}\bfseries,
   stringstyle=\color{purple},
   numberstyle=\ttfamily\color{gray},
+  aboveskip=2.5pt,
+  belowskip=2.5pt
 }
 
-\usetikzlibrary{automata,positioning,topaths,arrows}
+\lstdefinestyle{c++11} {%
+    morekeywords={nullptr}%
+}
 
 \bibliographystyle{plain}
 
@@ -99,7 +109,7 @@ r = 1;           // 通过引用 r 对变量 v 赋值
 printf("%d", v); // v 的值是 1
 \end{lstlisting}
 与指针类似，我们可以定义常量引用：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}[language=c++,numbers=none]
 const int &r2 = v;
 \end{lstlisting}
 这样我们就只能通过 \texttt{r2} 读取 \texttt{v} 而不能进行修改。引用本质上是非空指针常量的语法糖，与指针常量不一样，使用引用不需要进行解指针运算，在一些函数参数上使用引用非常方便：
@@ -119,10 +129,11 @@ bool func_ref(const struct test_s &p) {
 struct test_s obj;
 func_val(obj);  // 直接将 obj 作为实参传递
 func_ptr(&obj); // 将 obj 的地址作为实现传递
-func_ref(obj); // 将 obj 绑定到引用参数
+func_ref(obj);  // 将 obj 绑定到引用参数
 \end{lstlisting}
 上面的三个函数都不会修改对象 \texttt{obj} 的值，但是传值的版本会发生结构体的值拷贝，另外两个则不会。为了避免拷贝开销，在 C 语言中函数的结构体参数一般使用指针（并且尽量使用常量指针确保无副作用），C++ 中则更推荐使用引用。下面的例子将说明使用引用作为函数参数比指针更为直观：
 \begin{lstlisting}[language=c++]
+// 传出参数为 char* 的引用
 long read_file_ref(char* &p, const char *path) {
     long size = -1;
     FILE *fp = fopen(path, "r");
@@ -134,6 +145,7 @@ long read_file_ref(char* &p, const char *path) {
     }
     return size;
 }
+// 传出参数为 char* 的指针
 long read_file_ptr(char* *p, const char *path) {
     long size = -1;
     FILE *fp = fopen(path, "r");
@@ -208,7 +220,7 @@ namespace utils {
 } // 命名空间结束不需要分号
 \end{lstlisting}
 命名空间可以在多处定义，加入上面的 \texttt{utils} 命名空间已经定义过，这里的定义会把 \texttt{max} 名字添加到现有的命名空间中。每个命名空间都是一个作用域，就像一个块或者函数一样。通过\textbf{作用域运算符 \texttt{::}} 可以访问命名空间内部的名字：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}[language=c++,numbers=none]
 utils::max(1, 2);
 \end{lstlisting}
 作用域运算符在其他很多场合也有用，例如类或者结构体，和成员运算符 \texttt{.} 或者 \texttt{->} 不同，作用域运算符只能静态使用：
@@ -224,21 +236,45 @@ int n1 = 10;   // 使用 = 运算符初始化（不是赋值）
 int n2(v - 1); // 通过构造函数初始化
 int n3();      // 使用默认值初始化
 \end{lstlisting}
-第一种初始化是和 C 语言相同的初始化方式，既使用 \texttt{=} 运算符初始化，后面两种则是 C++ 引入的初始化方式：通过构造函数初始化。
-
-构造函数将在 \ref{sec:constructor} 节介绍，这里我们要指出：所有内置类型都可以通过构造函数来初始化，也就是这种方式：
+第一种初始化是和 C 语言相同的初始化方式，既使用 \texttt{=} 运算符初始化，后面两种则是 C++ 引入的初始化方式：通过构造函数初始化。构造函数将在 \ref{sec:constructor} 节介绍。这里要指出：所有内置类型都可以通过构造函数来初始化，也就是这种方式：
 \begin{lstlisting}[language=c++]
-int v1(), v2(1); // 默认构造函数将 v1 初始化为 0
-bool b1(), b2(true); // bool 类型的默认构造函数将 bool 对象初始化为 false
+int v1(), v2(1);      // 默认构造函数将 v1 初始化为 0
+bool b1(), b2(true);  // bool 类型的默认构造函数将 bool 对象初始化为 false
 bool b3 = bool(true); // 构造一个临时的 bool 对象初始化 b3
 \end{lstlisting}
 
 除了初始化以外，使用\textbf{赋值运算符 \texttt{=}} 对变量进行\textbf{赋值}：
 \begin{lstlisting}[language=c++]
-n1 = 1; // 赋值
+n1 = 1;           // 使用字面量对变量赋值
 n1 = n2 = int(2); // n1 和 n2 都被赋值为 2
 \end{lstlisting}
 赋值运算符的左侧必须是变量，右侧为和左侧变量相同类型的表达式（或者可以隐式转换为相同类型），且赋值运算符是右结合的。
+
+\subsection{空指针}
+
+在 C 中我们经常使用 \texttt{NULL} 宏来表示空指针，在 C++ 中也能使用这个宏。不过如果我们去翻阅这个宏的实现，就会发现这个宏会针对 C 和 C++ 有不同的实现：
+\begin{lstlisting}[language=c++]
+// C 中的 NULL 宏定义
+#define NULL ((void*)0)
+// C++ 中的 NULL 宏定义
+#define NULL 0
+\end{lstlisting}
+可以看到，在 C 中，\texttt{NULL} 被定义成 \texttt{void} 型的空指针，但是 C++ 中 \texttt{void*} 指针\CJKunderdot{不能隐式转换成其他指针类型}（见文献 \cite{Lippman2013C} 第 4.11.2节）。而 C++ 中的整数 0 可以转换成任意指针类型，因此 C++ 中的 NULL 定义如第 4 行所示。
+
+由于 C++ 中的 \texttt{NULL} 就是整数 0，因此假设有以下重载函数调用：
+\begin{lstlisting}[language=c++]
+void print(int n);
+void print(char *s);
+print(NULL);
+\end{lstlisting}
+上面第 3 行的调用处会优先匹配第 1 行参数为 \texttt{int} 型的重载版本（写成 \texttt{NULL} 说明程序员实际想调用第 2 行的重载版本）。为了指定使用第二行的重载版本，我们实际上可以这样做：
+\begin{lstlisting}[language=c++,numbers=none]
+print((char*)0); // 将 0 强制转换成 char*，为什么不转换成 void* ？
+\end{lstlisting}
+在 C++11 中提供了 \texttt{nullptr} 关键字专门表示空指针，\texttt{nullptr} 可以转换为任何指针类型（指针的值是 0），因此也可以这样写：
+\begin{lstlisting}[language=c++,numbers=none,style=c++11]
+print(nullptr);
+\end{lstlisting}
 
 \section{类}
 
@@ -289,7 +325,7 @@ int Point::x() { return this->_x; }
 \texttt{const 成员函数}
 
 回想我们在 C 语言中定义的常量变量：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}[language=c++,numbers=none]
 const int x = 1;
 \end{lstlisting}
 很显然不能在定义 \texttt{x} 变量之后修改它的值。现在我们看 C++ 的例子：
@@ -385,7 +421,7 @@ public:
 };
 \end{lstlisting}
 这样就可以使用加法运算符计算两个 \texttt{Point} 对象的向量和了：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}[language=c++,numbers=none]
 Point p = Point(1, 2) + Point(3, 4); // p == Point(4, 6)
 \end{lstlisting}
 
@@ -414,6 +450,50 @@ public:
 由于和默认版本的行为相同，这里没必要显示地重载 \texttt{Point} 类的赋值运算符。但是对于诸如包含指向动态内存指针成员的类，我们需要自己重载赋值运算符，这和拷贝构造函数的情况类似。因此很多场景下，需要实现拷贝构造函数的类也需要重载赋值运算符——前者负责对象初始化，后者负责对象赋值。
 
 \subsection{静态成员}
+
+有时候我们希望类的所有对象能够访问一个共同的对象，例如某个日志类需要一个全局的输出文件流，一般我们可以使用全局变量或者源文件内的静态变量来存储这个公用的文件流句柄，不过在 C++ 中我们还可以使用类的静态成员。在类中使用 \texttt{static} 关键字声明静态成员：
+\begin{lstlisting}[language=c++]
+class Logger {
+public:
+    Logger();
+    Logger operator<<(int n);
+    static FILE* stream() { return ss; }
+    static void set_stream(FILE *s);
+private:
+    static FILE *ss;
+};
+\end{lstlisting}
+静态成员在类的作用域内但具有静态变量的生命周期，因此静态成员存储在类的对象之外而不属于任何对象。因此静态成员函数中不能使用 \texttt{this} 指针并且不能声明成 \texttt{const} 属性。
+
+\paragraph{访问静态成员}
+
+通过作用域运算符 \texttt{::} 可以直接访问类的静态成员：
+\begin{lstlisting}[language=c++]
+FILE *s = Logger::stream();
+Logger::set_stream(stdout);
+\end{lstlisting}
+对类的对象使用成员访问运算符也可以访问静态成员：
+\begin{lstlisting}[language=c++]
+Logger log;
+FILE *s = log.stream();
+\end{lstlisting}
+在类的内部不使用作用域运算符就能直接使用静态成员：
+\begin{lstlisting}[language=c++]
+Logger Logger::operator<<(int n) {
+    fprintf(stream(), "%d", n); // 成员函数可以直接访问静态成员
+    return *this;
+}
+\end{lstlisting}
+
+\paragraph{定义静态成员}
+
+一般在类外部定义静态成员：
+\begin{lstlisting}[language=c++]
+FILE* Logger::ss = nullptr;        // 定义静态成员变量
+void Logger::set_stream(FILE *s) { // 定义静态成员函数
+    ss = s;
+}
+\end{lstlisting}
 
 \subsection{访问控制}
 
