@@ -112,7 +112,7 @@ printf("%d", v); // v 的值是 1
 \begin{lstlisting}[language=c++,numbers=none]
 const int &r2 = v;
 \end{lstlisting}
-这样我们就只能通过 \texttt{r2} 读取 \texttt{v} 而不能进行修改。引用本质上是非空指针常量的语法糖，与指针常量不一样，使用引用不需要进行解指针运算，在一些函数参数上使用引用非常方便：
+这样我们就只能通过 \texttt{r2} 读取 \texttt{v} 而不能修改。\CJKunderdot{引用本质上是非空指针常量的语法糖}，与指针常量不同，引用不需要进行解指针运算，因此在一些函数参数上使用引用非常方便：
 \begin{lstlisting}[language=c++]
 // 直接传值
 bool func_val(struct test_s p) {
@@ -164,11 +164,11 @@ long size = read_file_ref(data, "file path");
 char *data = NULL;
 long size = read_file_ref(&data, "file path");
 \end{lstlisting}
-这两个函数的作用都是读取指针文件并返回文件的长度，其中读取到的内容通过参数 \texttt{p} 返回，我们发现传递引用版本的函数在使用 \texttt{p} 的时候少一次解指针运算，可以减少心智负担（事实是多重指针在复杂场合下确实容易出错）。
+这两个函数的作用都是读取文件并返回文件的长度，其中读取到的内容通过参数 \texttt{p} 返回，我们发现传递引用版本的函数在使用 \texttt{p} 的时候少一次解指针运算，可以减少心智负担（事实是多重指针在复杂场合下确实容易出错）。
 
 \subsection{函数重载}
 
-在 C++ 中，我们可以定义一组同名的函数，只要保证参数数量或参数类型各不相同，例如：
+在 C++ 中可以定义一组同名的函数，前提是保证参数数量或参数类型各不相同，例如：
 \begin{lstlisting}[language=c++]
 int max(int a, int b);
 int max(int a, int b, int c);
@@ -234,7 +234,7 @@ utils::max(1, 2);
 \begin{lstlisting}[language=c++]
 int n1 = 10;   // 使用 = 运算符初始化（不是赋值）
 int n2(v - 1); // 通过构造函数初始化
-int n3();      // 使用默认值初始化
+int n3();      // 使用默认构造函数初始化为 0
 \end{lstlisting}
 第一种初始化是和 C 语言相同的初始化方式，既使用 \texttt{=} 运算符初始化，后面两种则是 C++ 引入的初始化方式：通过构造函数初始化。构造函数将在 \ref{sec:constructor} 节介绍。这里要指出：所有内置类型都可以通过构造函数来初始化，也就是这种方式：
 \begin{lstlisting}[language=c++]
@@ -249,6 +249,10 @@ n1 = 1;           // 使用字面量对变量赋值
 n1 = n2 = int(2); // n1 和 n2 都被赋值为 2
 \end{lstlisting}
 赋值运算符的左侧必须是变量，右侧为和左侧变量相同类型的表达式（或者可以隐式转换为相同类型），且赋值运算符是右结合的。
+
+\subsubsection{默认初始化} \label{sec:default_init}
+
+定义变量时没有指定初值（包括不调用构造函数）将执行\textbf{默认初始化}。对于内置类型，默认初始化会将静态变量初始化为 0，而非静态变量\CJKunderdot{不会初始化}。和 C 语言类似，未初始化的内置类型值是未定义的，很多编译器能会对此做出警告。类的默认初始化则由类的默认构造函数（\ref{sec:default_constructor} 节）决定，大部分的类都会提供一个合适的默认值（例如 `std::string` 会默认初始化成空的）。
 
 \subsection{空指针}
 
@@ -280,7 +284,7 @@ print(nullptr);
 
 \section{类}
 
-在 C 语言中，我们可以通过结构体定义数据类型，而 C++ 中则引入了 \textbf{类}。从实现上来看，一个类由若干数据成员和方法（用于操作数据成员的函数）构成，仅从这一点上来看，类和 C 结构体配合专用操作函数非常相似。但是类提供了\textbf{访问控制}的功能，下面我们通过一个例子简单说明：
+在 C 语言中，我们可以通过结构体定义数据类型，而 C++ 中则引入了 \textbf{类}。从实现上来看，一个类由若干数据成员和方法（用于操作数据成员的函数）构成，相比于 C 结构体，类具有\textbf{访问控制}功能。通过 \texttt{struct} 或者 \texttt{class} 关键字定义类。我们通过一个简单的例子进行说明：
 \begin{lstlisting}[language=c++]
 class Point {
 public:
@@ -295,7 +299,7 @@ Point p;   // 定义 Point 对象 p
 p.setX(2); // 正确
 p._x = 3;  // 编译报错（私有成员在类外部不可见）
 \end{lstlisting}
-\texttt{Point} 类用于表示二维平面中的点，在 GUI 框架中非常常见，\texttt{Point} 类也是贯穿本节的例子。这个例子中我们分别实现了设置和获取 $(x, y)$ 坐标的方法，这些方法处于 \texttt{public} 说明符下，因此外部代码可以访问和调用，而坐标数据则存储在 \texttt{private} 说明符下，只有 \texttt{Point} 类内部可以访问。这里我们故意将坐标存储为 \texttt{short} 类型（常见的 GUI 坐标使用 \texttt{short} 完全足够），这样和使用 C 结构体相比，有以下好处：
+\texttt{Point} 类用于表示二维平面中的点，在 GUI 框架中非常常见，\texttt{Point} 类也是贯穿本节的例子。这个例子中我们分别实现了设置和获取 $(x, y)$ 坐标的方法，这些方法处于 \texttt{public} 说明符后面，因此外部代码可以访问和调用，而坐标数据则存储在 \texttt{private} 说明符后面，只有 \texttt{Point} 类内部可以访问。这里我们故意将坐标存储为 \texttt{short} 类型（常见的 GUI 坐标使用 \texttt{short} 完全足够），这样和使用 C 结构体相比，有以下好处：
 \begin{itemize}
   \item 坐标存储为 \texttt{short} 类型，节约空间；
   \item \texttt{x()}，\texttt{setX()} 方法操作的类型都是 \texttt{int}，使用上比较通用（乘法运算时 \texttt{short} 有溢出风险，并且人们更习惯 \texttt{int}）；
@@ -386,9 +390,13 @@ public:
 \end{lstlisting}
 在冒号和花括号之间的代码就是初始值列表。
 
-\paragraph{默认构造函数} 如果不定义任何构造函数，编译器会自动生成一个默认的构造函数，这个构造函数会默认初始化类中的成员变量（C++11 还引入了类内初始值）。某些原因会导致不能使用默认的构造函数。
+\paragraph{默认构造函数} \label{sec:default_constructor}
 
-\paragraph{拷贝构造函数} 使用一个对象来\CJKunderdot{初始化}另一个同类对象时会调用拷贝构造函数执行初始化，如果没有显式定义，编译器会生成默认的拷贝构造函数（依次拷贝所有成员）。拷贝构造函数的参数是一个相同类型的对象或者引用：
+默认构造函数是创建不提供初始值的对象时所调用的构造函数，也就是参数列表为空的构造函数。如果不定义任何构造函数，编译器会自动生成一个\textbf{合成的默认构造函数}，合成的默认构造函数会默认初始化类中的成员变量（C++11 还引入了类内初始值）。某些原因会导致不能使用默认的构造函数，此时要手动定义默认构造函数。
+
+\paragraph{拷贝构造函数}
+
+使用一个对象来\CJKunderdot{初始化}另一个同类对象时会调用拷贝构造函数执行初始化，如果没有显式定义，编译器会生成默认的拷贝构造函数（依次拷贝所有成员）。拷贝构造函数的参数是一个相同类型的对象或者引用：
 \begin{lstlisting}[language=c++]
 class Point {
 public:
@@ -491,7 +499,7 @@ Logger Logger::operator<<(int n) {
 
 一般在类外部定义静态成员：
 \begin{lstlisting}[language=c++]
-FILE* Logger::ss = nullptr;        // 定义静态成员变量
+FILE* Logger::ss = nullptr;        // 通常在类外部定义静态成员变量
 void Logger::set_stream(FILE *s) { // 定义静态成员函数
     ss = s;
 }
@@ -499,11 +507,36 @@ void Logger::set_stream(FILE *s) { // 定义静态成员函数
 
 \subsection{访问控制}
 
-\subsection{继承}
+前面已经简单提到访问控制的问题，C++ 中提供下列 \textbf{访问说明符} 控制类成员的访问：
 
-\subsection{运行时多态}
+\begin{itemize}
+  \item \texttt{public} 说明符后面定义的成员可以在整个程序中访问；
+  \item \texttt{private} 说明符后面定义的成员只能在类内部访问（比如类的成员函数或者类内部定义的类）；
+  \item \texttt{protected} 说明符在面向对象章节介绍。
+\end{itemize}
 
-\section{内存管理}
+通过将属性定义到 \texttt{private} 说明符后面可以对类的使用者隐藏类的\textbf{实现}细节，而 \texttt{public} 说明符后面定义的属性是可以被类的使用者访问，因此属于类提供的\textbf{接口}。
+
+关键字 \texttt{class} 或者 \texttt{struct} 都可以用来定义类，它们之间仅用一处细微的差别：\texttt{struct} 的默认访问级别是 \texttt{public}，而 \texttt{class} 的默认访问级别是 \texttt{private}。定义在第一个访问说明符前面的成员使用默认访问级别。因此，在不使用访问说明符的情况下，\texttt{struct} 的所有成员都是对外可见的，而 \texttt{class} 则不可见。
+
+\section{动态内存}
+
+\subsection{new/delete}
+
+通过 \textbf{\texttt{new}} 运算符从堆上为对象分配内存空间并返回对象的指针：
+\begin{lstlisting}[language=c++,numbers=none]
+int *p = new int; // p 指向一个未初始化的 int 对象
+\end{lstlisting}
+在不使用构造函数的情况下，\texttt{new} 生成的对象是默认初始化的（\ref{sec:default_init} 节），因此内置类型的值是未定义的，而类对象由默认构造函数初始化。我们还可以通过构造函数来初始化对象：
+\begin{lstlisting}[language=c++]
+int *i1 = new int();                       // *i1 == 0
+int *i2 = new int(2);                      // *i2 == 2
+std::string *s = new std::string("hello"); // *s == "hello"
+\end{lstlisting}
+
+我们还可以通过 \texttt{new[]} 运算符分配一个数组：
+
+\section{面向对象编程}
 
 \section{模板和标准库}
 
@@ -557,6 +590,8 @@ bool some_func() {
 }
 \end{lstlisting}
 上面的例子定义了一个 \texttt{MutexLocker} 来保证互斥锁加锁后一定会释放，无论我们怎么修改 14 行的逻辑都能够保证这一点（当然不能手动调用 \texttt{g\_mutex.unlock()}）。
+
+\subsection{PIMPL}
 
 \bibliography{references}
 
