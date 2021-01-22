@@ -523,7 +523,9 @@ void Logger::set_stream(FILE *s) { // 定义静态成员函数
 
 \subsection{new/delete}
 
-通过 \textbf{\texttt{new}} 运算符从堆上为对象分配内存空间并返回对象的指针：
+\subsubsection{分配动态内存}
+
+使用 \textbf{\texttt{new}} 运算符从堆上为对象分配内存空间并返回对象的指针：
 \begin{lstlisting}[language=c++,numbers=none]
 int *p = new int; // p 指向一个未初始化的 int 对象
 \end{lstlisting}
@@ -533,8 +535,27 @@ int *i1 = new int();                       // *i1 == 0
 int *i2 = new int(2);                      // *i2 == 2
 std::string *s = new std::string("hello"); // *s == "hello"
 \end{lstlisting}
+还可以使用 \texttt{new} 运算符分配一个数组：
+\begin{lstlisting}[language=c++]
+int *i = new int[10];                      // 分配 10 个未初始化的 int 对象
+int *i = new int[10]();                    // 分配 10 个未初始化为 0 的 int 对象
+\end{lstlisting}
 
-我们还可以通过 \texttt{new[]} 运算符分配一个数组：
+就像使用 \texttt{malloc} 一样，\texttt{new} 运算符一样可能出现内存不够导致无法分配的错误。一般情况下，\texttt{new} 在内存分配失败时会抛出一个 \texttt{std::bad\_alloc} 异常，如果不希望抛出异常，可以使用下面版本：
+\begin{lstlisting}[language=c++,numbers=none]
+int *i = new (std::nothrow) int;           // 如果分配失败就返回一个空指针
+\end{lstlisting}
+
+\subsubsection{释放动态内存}
+
+动态分配的内存在使用结束后应当释放，以免内存耗尽。通过 \textbf{\texttt{delete}} 表达式释放动态分配的内存：
+\begin{lstlisting}[language=c++,numbers=none]
+delete po;                                // po 指向由 new 分配的对象
+delete[] pa;                              // pa 指向由 new 分配的数组
+\end{lstlisting}
+\texttt{delete} 表达式会调用析构函数并释放对象使用的内存。\texttt{delete} 运算符后面必须跟一个由 \texttt{new} 分配的对象或数组的指针。如果不是指针类型，\texttt{delete} 表达式会产生编译错误，如果指针不是由 \texttt{new} 运算符分配的内存则会产生运行错误或者隐患。
+
+使用 \texttt{new} 动态分配的对象直到调用 \texttt{delete} 生命周期才会结束。因此程序员要手动管理这些对象的生命周期，而不能从语法作用域上保证。
 
 \section{面向对象编程}
 
