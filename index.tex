@@ -557,11 +557,67 @@ delete[] pa;                              // pa 指向由 new 分配的数组
 
 使用 \texttt{new} 动态分配的对象直到调用 \texttt{delete} 生命周期才会结束。因此程序员要手动管理这些对象的生命周期，而不能从语法作用域上保证。
 
+\subsection{智能指针}
+
+使用 \texttt{new} 申请的对象一般需要程序员手动调用 \texttt{delete} 销毁，因为指针的生命周期结束时不会销毁其指向的对象。实际上，这种动态内存的使用方式非常容易出问题，手动管理对象的生命周期是 C 的一大难点，非常影响开发效率。
+
+C++11 标准中引入了\textbf{智能指针}类，这种类可以自动管理动态对象的生命周期。本节我们只介绍 \texttt{shared\_ptr} 类。\texttt{shared\_ptr} 在头文件 \textsl{memory} 中定义的模板类。
+
+\subsubsection{初始化和使用}
+
+这样定义和初始化 \texttt{shared\_ptr} 对象：
+\begin{lstlisting}[language=c++]
+std::shared_ptr<int> p1;            // 指向 int 的 shared_ptr（类似 int*）
+std::shared_ptr<myclass> p2;        // 指向 myclass 的 shared_ptr（类似 myclass*）
+std::shared_ptr<int> p3(new int()); // 使用 int* 初始化 p3
+\end{lstlisting}
+默认初始化的 \texttt{shared\_ptr} 为空指针，可以使用动态分配的指针初始化 \texttt{shared\_ptr}。需要注意的是，无法通过普通指针隐式转换为 \texttt{shared\_ptr}：
+\begin{lstlisting}[language=c++]
+std::shared_ptr<int> p1(new int());  // 正确，显示地从 int* 构造 
+std::shared_ptr<int> p2 = new int(); // 错误，无法使用隐式转化shared_ptr<int>
+\end{lstlisting}
+
+\texttt{shared\_ptr} 的使用方式和普通指针相似：
+\begin{lstlisting}[language=c++]
+if (p1 && *p1 != 0) { // p1 不为空且 p1 指向的 int 值不为 0
+    printf("valid data: %d\n", *p1);
+}
+\end{lstlisting}
+
+\paragraph{\texttt{make\_shared()} 函数}
+
+这是更推荐使用的 \texttt{shared\_ptr} 的初始化方式，此函数会在动态内存上构造目标对象并返回指向此对象的 \texttt{shared\_ptr}（只分配一次内存）。\texttt{shared\_ptr} 是一个模板函数，它的模板参数是对象的类型：
+\begin{lstlisting}[language=c++,numbers=none]
+std::shared_ptr<int> p1 = make_shared<int>(2); // p1 指向值为 2 的 int 对象
+\end{lstlisting}
+
+\subsubsection{拷贝和赋值和析构}
+
+对 \texttt{shared\_ptr} 进行拷贝或赋值时，它会记录还有多少 \texttt{shared\_ptr} 指向此对象，也就是会维护对象的 \textbf{引用计数}，例如：
+\begin{lstlisting}[language=c++,numbers=none]
+std::shared_ptr<int> p1 = make_shared<int>(); // p1 指向一个 int* 对象
+std::shared_ptr<int> p2 = p1; // p2 和 p1 指向同一个对象，那么这个对象的引用计数为 2
+\end{lstlisting}
+
+一旦某个对象的引用计数变成 0，就会自动析构对象并回收内存：
+\begin{lstlisting}[language=c++,numbers=none]
+std::shared_ptr<int> p = make_shared<int>(); // p 指向一个 int* 对象，此对象的引用计数为 1
+p = std::shared_ptr<int>(); // 使用空指针给 p 赋值，因而 p 不再引用原先的对象，
+                            // 该对象的引用计数递减（变成 0）
+\end{lstlisting}
+执行完第 2 行之后，原来对象的引用计数被清零，也就是没有任何 \texttt{shared\_ptr} 引用它，此时会自动析构并释放这个 \texttt{int} 对象。
+
+\paragraph{自动销毁对象}
+
+\texttt{shared\_ptr} 析构时也会递减所引用对象的引用计数。当指向某个对象的 \texttt{shared\_ptr} 都被销毁或者被赋值为其他指针时，这个对象就会自动被销毁并释放内存。这是使用 \texttt{shared\_ptr} 的最大好处（尽管这个机制比使用裸指针效率稍低，但一般不是问题）。
+
+智能指针是非常有用的技术，后面我们还将介绍在不支持 C++11 的环境中实现类似的技术。
+
 \section{面向对象编程}
 
 \section{模板和标准库}
 
-\section{重要的开发技术}
+\section{实用的开发技术}
 
 \subsection{RAII 机制}
 
