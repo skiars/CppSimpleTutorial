@@ -18,21 +18,20 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - uses: xu-cheng/texlive-action/full@v1
+      - uses: actions/checkout@v2
+        if: ${{ github.event_name == 'push' }}
+        with:
+          ref: main
+      - name: compile
+        uses: xu-cheng/texlive-action/full@v1
         with:
           run: |
             cp -r fonts /usr/share
             fc-cache -fv
             apk add make
             make
-      - name: Delete Latest Release
-        uses: dev-drprasad/delete-tag-and-release@v0.1.2
-        with:
-          delete_release: true
-          tag_name: latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create Latest Release
+      - name: Update Latest Release
+        needs: compile
         uses: meeDamian/github-release@2.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -42,4 +41,4 @@ jobs:
           body: The Latest Release.
           files: cpp_simple_tutorial.pdf
           gzip: false
-          allow_override: false
+          allow_override: true

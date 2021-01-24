@@ -1,2 +1,3 @@
 # CppSimpleTutorial
-A C++ Simple Tutorial
+
+[https://github.com/Skiars/CppSimpleTutorial/releases/tag/latest]
