@@ -521,6 +521,8 @@ void Logger::set_stream(FILE *s) { // 定义静态成员函数
 
 关键字 \texttt{class} 或者 \texttt{struct} 都可以用来定义类，它们之间仅用一处细微的差别：\texttt{struct} 的默认访问级别是 \texttt{public}，而 \texttt{class} 的默认访问级别是 \texttt{private}。定义在第一个访问说明符前面的成员使用默认访问级别。因此，在不使用访问说明符的情况下，\texttt{struct} 的所有成员都是对外可见的，而 \texttt{class} 则不可见。
 
+\section{模板和标准库}
+
 \section{动态内存}
 
 \subsection{new/delete}
@@ -616,8 +618,6 @@ p = std::shared_ptr<int>(); // 使用空指针给 p 赋值，因而 p 不再引�
 智能指针是非常有用的技术，后面我们还将介绍在不支持 C++11 的环境中实现类似的技术。
 
 \section{面向对象编程}
-
-\section{模板和标准库}
 
 \section{实用的开发技术}
 
