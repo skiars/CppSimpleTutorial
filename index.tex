@@ -521,40 +521,7 @@ void Logger::set_stream(FILE *s) { // 定义静态成员函数
 
 关键字 \texttt{class} 或者 \texttt{struct} 都可以用来定义类，它们之间仅用一处细微的差别：\texttt{struct} 的默认访问级别是 \texttt{public}，而 \texttt{class} 的默认访问级别是 \texttt{private}。定义在第一个访问说明符前面的成员使用默认访问级别。因此，在不使用访问说明符的情况下，\texttt{struct} 的所有成员都是对外可见的，而 \texttt{class} 则不可见。
 
-\section{模板和标准库}
-
-回想一下，我们在 C 中实现一个判断两个对象大小的函数，一般要针对不同的类型编写不同的函数：
-\begin{lstlisting}[language=c++]
-// 求较大整数的函数
-int max_int(int a, int b) {
-    return a > b ? a : b;
-}
-// 求较大浮点数的函数
-double max_double(double a, double b) {
-    return a > b ? a : b;
-}
-// 使用宏实现的 max 算法
-#define max_type(a, b)  ((a) > (b) ? (a) : (b))
-\end{lstlisting}
-前面两个 \texttt{max\_xxx} 函数的缺点非常明显：我们必须针对每种类型重新编写一份几乎一样的代码。而宏版本的缺点也很明显：容易对参数重复计算（宏本质是字符串替换），复杂功能极难维护。
-
-我们还能举出一些例子，比如链表。链表的算法基本都是相同的，但是我们要在链表中存储不同的数据类型。对此一般有两种实现思路：
-\begin{itemize}
-  \item 数据类型必须派生自链表节点类，并通过结点类维护链表；
-  \item 为每种数据类型实现链表算法。
-\end{itemize}
-第一种方法的思路在 C 中使用十分广泛，这种用法的缺点是需要侵入式修改并且须要使用指针来访问数据，使用上并不友好；第二种实现则不可能作为库中的代码。作为对比，我们看下 C++ 标准库中的链表使用方法：
-\begin{lstlisting}[language=c++]
-std::list<int> l;       // 定义存储 int 数据的链表
-l.push_back(1);         // 在尾部插入 1
-l.push_front(2);        // 在头部插入 2
-l.insert(--l.end(), 3); // 在倒数第 2 个节点后插入 3
-l.erase(++l.begin());   // 删除第二个元素
-l.pop_back();           // 删除尾部元素
-\end{lstlisting}
-可以看出，标准库将链表的实现封装的非常好，这些代码看起来就是在一种``容器''中操作我们存储的 \texttt{int} 数据，而不用关心这些数据是怎样被存储的，因此容易使用。
-
-在 C++ 中，通过模板可以将一份代码用于不同的类型或某些场景
+\input{template_stl.tex}
 
 \section{动态内存}
 
