@@ -6,7 +6,9 @@
 \usepackage{enumitem}
 \usepackage{listings}
 \usepackage{titlesec}
+\usepackage{scrextend}
 \usepackage{xcolor}
+\usepackage[numbers,sort&compress]{natbib}
 
 \setCJKmainfont[BoldFont=FZHei-B01S, ItalicFont=FZKai-Z03S]{FZShuSong-Z01S}
 \setCJKmonofont{FZFangSong-Z02S}
@@ -93,6 +95,15 @@ C++ 的另一个重要的编程范式是范型编程，这里还是举一个简�
 \end{itemize}
 
 C++ 是一种从实际工程需求出发的语言，
+
+\subsection{进一步的学习资料}
+
+如果希望全面并且深入地学习 C++，读者需要查阅更多的参考资料，这里给出一些推荐的资源：
+
+\begin{labeling}{\bfseries cppreference.com\cite{cppreference.com}}
+  \item[\bfseries C++ Primer\cite{Lippman2013C}] 是 C++ 的经典教程，内容覆盖面广并且细节比较多。建议初学者在学习和使用 C++ 的过程中查阅而不是从头到尾地通读（否则你很可能记不住前面阅读过的大量知识）；
+  \item[\bfseries cppreference.com\cite{cppreference.com}] 一个 C 和 C++ 语言和标准库的参考网站，对语言的各个版本各种细节都有详细地描述，适合有经验的读者使用（这个网站可以切换中文）。
+\end{labeling}
 
 \section{基础知识}
 
@@ -521,7 +532,8 @@ void Logger::set_stream(FILE *s) { // 定义静态成员函数
 
 关键字 \texttt{class} 或者 \texttt{struct} 都可以用来定义类，它们之间仅用一处细微的差别：\texttt{struct} 的默认访问级别是 \texttt{public}，而 \texttt{class} 的默认访问级别是 \texttt{private}。定义在第一个访问说明符前面的成员使用默认访问级别。因此，在不使用访问说明符的情况下，\texttt{struct} 的所有成员都是对外可见的，而 \texttt{class} 则不可见。
 
-\input{template_stl.tex}
+\input{template.tex}
+\input{stl.tex}
 
 \section{动态内存}
 

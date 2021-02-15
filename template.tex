@@ -1,4 +1,4 @@
-\section{模板和标准库}
+\section{模板}
 
 回想一下，我们在 C 中实现一个判断两个对象大小的函数，一般要针对不同的类型编写不同的函数：
 \begin{lstlisting}[language=c++]
@@ -13,11 +13,11 @@ double max_double(double a, double b) {
 // 使用宏实现的 max 算法
 #define max_type(a, b)  ((a) > (b) ? (a) : (b))
 \end{lstlisting}
-前面两个 \texttt{max\_xxx} 函数的缺点非常明显：我们必须针对每种类型重新编写一份几乎一样的代码。而宏版本的缺点也很明显：容易对参数重复计算（宏本质是字符串替换），复杂功能极难维护。在 C++ 中我们可以使用 \textbf{模板} 来实现这种核心相同，但是要用于不同类型或者场合的算法。
+前面两个 \texttt{max\_xxx} 函数的缺点非常明显：我们必须针对每种类型重新编写一份几乎一样的代码。而宏版本的缺点也很明显：容易对参数重复计算（宏本质是字符串替换），同时功能复杂的宏很难维护。在 C++ 中我们可以使用 \textbf{模板} 来实现这种核心相同，但是要用于不同类型或者场合的算法。
 
-\subsection{定义模板函数}
+\subsection{函数模板}
 
-作为第一个例子，我们尝试通过 \textbf{模板函数} 实现上面的 \texttt{max} 函数：
+作为第一个例子，我们尝试通过 \textbf{函数模板} 实现上面的 \texttt{max} 函数：
 \begin{lstlisting}[language=c++]
 template <typename T>
 T max(const T &a,  const T &b) {
@@ -28,13 +28,37 @@ T max(const T &a,  const T &b) {
 \begin{lstlisting}[language=c++,numbers=none]
 double v = max<double>(1.0, 3.0);
 \end{lstlisting}
-为了计算两个 \texttt{double} 值的最大者，需要指定 \texttt{double} 作为模板参数。为了生成目标代码，编译器会为 \texttt{max<double>} 生成这样的等效函数：
+为了计算两个 \texttt{double} 值的最大者，需要指定 \texttt{double} 作为\textbf{模板实参}。编译器会为 \texttt{max<double>} 生成这样的等效函数：
 \begin{lstlisting}[language=c++]
 // 使用 double 代替模板参数 T
 double max<double>(const double &a, const double &b) {
     return a > b ? a : b;
 }
 \end{lstlisting}
+函数模板被调用的同时会被\textbf{实例化}。通常，编译器会根据函数实参来推断模板实参，然后使用模板实参替换对应的模板参数。对于前面的 \texttt{max} 函数，下面的使用方式也会生成 \texttt{max<double>} 实例：
+\begin{lstlisting}[language=c++,numbers=none]
+double v = max(1.0, 3.0); // 编译器会自动推断函数模板实参
+\end{lstlisting}
+
+\subsection{模板参数}
+
+前面的例子中，函数模板 \texttt{max} 有一个被 \texttt{typename} 修饰的参数 \texttt{T}，这表示 \texttt{T} 是一个\textbf{类型参数}。使用 \texttt{typename} 或者 \texttt{class} 修饰的模板参数都是类型参数，在模板参数中，这两个关键字含义相同并可以互换使用。类型参数的模板实参必须是一个类型。
+
+我们还可以使用 \textbf{非类型参数}，使用类型名修饰模板参数来指定非类型参数：
+\begin{lstlisting}[language=c++]
+// 如果 x 小于 lower，返回 lower；如果大于 upper，返回 upper；否则返回 x
+template <int lower, int upper>
+int bound(int x) {
+    return min(max(lower, x), upper);
+}
+\end{lstlisting}
+我们可以这样使用函数模板 \texttt{bound}：
+\begin{lstlisting}[language=c++,numbers=none]
+int v = max<0, 10>(3);
+\end{lstlisting}
+非类型模板参数的实参必须是常量表达式，因此其实参是一个常量值。需要使用常量参数的场合可以通过非类型模板参数来实现，例如上面的 \texttt{bound}。
+
+\subsection{类模板}
 
 
 我们还能举出一些例子，比如链表。链表的算法基本都是相同的，但是我们要在链表中存储不同的数据类型。对此一般有两种实现思路：
