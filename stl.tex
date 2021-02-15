@@ -1,5 +1,32 @@
 \section{标准模板库}
 
-相比于 C 语言，C++ 有更为丰富的标准库设施。作为标准库的一部分，标准模板库（Standard Template Library，STL）提供丰富的容器和算法接口，并且易于使用。由于 STL 是一套非常庞大的设施，本教程只介绍少数简单并且常用的内容。如果希望深入学习，读者可以阅读文献\cite{Lippman2013C,StlRef2002,HouJie2002STL}，建议读者在已经熟悉 STL 的情况下再去阅读文献\cite{HouJie2002STL}。
+相比于 C 语言，C++ 有更为丰富的标准库设施。作为标准库的一部分，标准模板库（Standard Template Library，STL）提供丰富的容器和算法接口，并且易于使用。由于 STL 是一套非常庞大的设施，本节的目标仅仅是带领读者认初步了解 STL 设施的使用并认识到它们的价值，进一步的学习需要阅读更详细的参考资料。。如果希望深入学习，读者可以阅读文献\cite{Lippman2013C,StlRef2002,HouJie2002STL}，建议读者在已经熟悉 STL 的情况下再去阅读文献\cite{HouJie2002STL}。
 
 STL 有两种常用的设施：\textbf{容器}和\textbf{算法}。后面我们还会看到，通过\textbf{迭代器}可以将两者结合起来。
+
+\subsection{容器}
+
+\textbf{容器} 是存储对象集合的对象，常见的 \texttt{vector}、\texttt{list} 等都是容器。C++ 标准对容器的实现有一些规范，例如要求 \texttt{vector} 支持变长序列的常量时间随机访问，且对尾部的插入时间开销也要是常量的。从另一个角度来说，我们知道容器的这些特性即可，而不用关心容器的实现方式（各厂家的实现也不尽相同）。
+
+继续以 \texttt{vector} 作为例子，我们演示一些基本的操作：
+\begin{lstlisting}[language=c++]
+std::vector<int> v; // 定义一个存储 int 数据的 vector 对象
+v.push_back(1); // 在 v 的尾部插入一个数值 1
+v.insert(v.begin() + 1, 2); // 在 v 的第 1 个元素处插入 2
+printf("%zu", v.size()); // 打印 v 的元素数量为 2
+printf("%d, %d", v[0], v[1]); // 1, 2
+v[0] = 3; // 将 v 的第 0 个元素修改为 3
+\end{lstlisting}
+上面演示了 \texttt{vector} 的定义、插入和随机访问等操作。接下来我们看 \texttt{list} 容器的相似操作：
+\begin{lstlisting}[language=c++]
+std::list<int> l; // 定义一个存储 int 数据的 list 对象
+l.push_back(1); // 在 l 的尾部插入一个数值 1
+printf("%zu", l.size()); // 打印 l 的元素数量为 1
+// 错误：list 不支持随机访问，不能通过”l 的第 n 个元素“这种方式来指定访问位置，因此不支持下标访问
+l.insert(l.begin() + 1, 2);
+l[0] = 3;
+\end{lstlisting}
+
+\subsection{迭代器}
+
+\subsection{算法}
