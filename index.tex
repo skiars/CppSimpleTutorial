@@ -1,6 +1,6 @@
 \documentclass[hyperref,UTF8]{article}
 \usepackage{hyperref}
-\usepackage{ctex}
+\usepackage[fontset=none]{ctex}
 \usepackage{xeCJKfntef}
 \usepackage{geometry}
 \usepackage{enumitem}
@@ -30,25 +30,28 @@
   pdfborder=0 0 0
 }
 
+\definecolor{lstgray}{gray}{.25}
 \lstset{
-  basicstyle=\ttfamily\small,
+  basicstyle=\ttfamily\lst@ifdisplaystyle\small\fi,
   numbers=left,numberstyle=\ttfamily\small,
   columns=fullflexible,
-  breakatwhitespace=false,
+  aboveskip=1pt,
+  belowskip=1pt,
+  morekeywords={nullptr},
+  commentstyle=\rmfamily\color{lstgray}\itshape,
+  keywordstyle=\color{violet!75!white}\bfseries,
+  ndkeywordstyle=\color{darkgray}\bfseries,
+  stringstyle=\color{purple},
+  identifierstyle=\color{black},
+  numberstyle=\ttfamily\color{lstgray},
+  escapeinside={([}{])},
+  escapebegin=\color{lstgray},
+  showstringspaces=false,
+  keepspaces=true,
   captionpos=b,               % sets the caption-position to bottom
   breaklines=true,            % automatic line breaking only at whitespace
-  keepspaces=true,
-  showstringspaces=false,
-  commentstyle=\color{green!50!black}\itshape,
-  keywordstyle=\color{cyan!50!black}\bfseries,
-  stringstyle=\color{purple},
-  numberstyle=\ttfamily\color{gray},
-  aboveskip=2.5pt,
-  belowskip=2.5pt
-}
-
-\lstdefinestyle{c++11} {%
-    morekeywords={nullptr}%
+  breakatwhitespace=false,
+  language=c++
 }
 
 \bibliographystyle{plain}
@@ -99,23 +102,23 @@ C++ 是一种从实际工程需求出发的语言，
 \subsection{引用}
 
 \textbf{引用}是对象的别名，通过下面的方法将变量声明为引用：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 int v = 5;
 int &r = v;
 \end{lstlisting}
 第 2 行的 \texttt{r} 就是一个引用：它是变量 \texttt{v} 的别名。在变量的声明前加一个 \texttt{\&} 符号定义引用，如上面的 \texttt{\&r}。引用只能在初始化时和变量绑定，此后引用不能再绑定其他变量。
 
 由于引用是变量的别名，对引用赋值会修改绑定变量的值：
-\begin{lstlisting}[language=c++]
-r = 1;           // 通过引用 r 对变量 v 赋值
-printf("%d", v); // v 的值是 1
+\begin{lstlisting}
+r = 1;           // 通过引用 ([r]) 对变量 ([v]) 赋值
+printf("%d", v); // ([v]) 的值是 ([1])
 \end{lstlisting}
 与指针类似，我们可以定义常量引用：
-\begin{lstlisting}[language=c++,numbers=none]
+\begin{lstlisting}[numbers=none]
 const int &r2 = v;
 \end{lstlisting}
 这样我们就只能通过 \texttt{r2} 读取 \texttt{v} 而不能修改。\CJKunderdot{引用本质上是非空指针常量的语法糖}，与指针常量不同，引用不需要进行解指针运算，因此在一些函数参数上使用引用非常方便：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 // 直接传值
 bool func_val(struct test_s p) {
     return p ? p.mem != 0 ? false;
@@ -129,13 +132,13 @@ bool func_ref(const struct test_s &p) {
     return p.mem != 0;
 }
 struct test_s obj;
-func_val(obj);  // 直接将 obj 作为实参传递
-func_ptr(&obj); // 将 obj 的地址作为实现传递
-func_ref(obj);  // 将 obj 绑定到引用参数
+func_val(obj);  // 直接将 ([obj]) 作为实参传递
+func_ptr(&obj); // 将 ([obj]) 的地址作为实现传递
+func_ref(obj);  // 将 ([obj]) 绑定到引用参数
 \end{lstlisting}
 上面的三个函数都不会修改对象 \texttt{obj} 的值，但是传值的版本会发生结构体的值拷贝，另外两个则不会。为了避免拷贝开销，在 C 语言中函数的结构体参数一般使用指针（并且尽量使用常量指针确保无副作用），C++ 中则更推荐使用引用。下面的例子将说明使用引用作为函数参数比指针更为直观：
-\begin{lstlisting}[language=c++]
-// 传出参数为 char* 的引用
+\begin{lstlisting}
+// 传出参数为 ([char*]) 的引用
 long read_file_ref(char* &p, const char *path) {
     long size = -1;
     FILE *fp = fopen(path, "r");
@@ -147,7 +150,7 @@ long read_file_ref(char* &p, const char *path) {
     }
     return size;
 }
-// 传出参数为 char* 的指针
+// 传出参数为 ([char*]) 的指针
 long read_file_ptr(char* *p, const char *path) {
     long size = -1;
     FILE *fp = fopen(path, "r");
@@ -171,13 +174,13 @@ long size = read_file_ref(&data, "file path");
 \subsection{函数重载}
 
 在 C++ 中可以定义一组同名的函数，前提是保证参数数量或参数类型各不相同，例如：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 int max(int a, int b);
 int max(int a, int b, int c);
 double max(double a, double b);
 \end{lstlisting}
 最直接的，重载函数减轻了为函数起名字的负担。需要注意的是，通过区分参数指针或引用指向的对象是常量还是非常量是可以实现函数重载的：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 int max(Node &a, Node &b);
 int max(const Node &a, const Node &b); // 新的重载函数
 \end{lstlisting}
@@ -187,7 +190,7 @@ int max(const Node &a, const Node &b); // 新的重载函数
 \subsubsection{重载运算符} \label{sec:overloaded_operator}
 
 可以通过重载运算符自定义特定运算符的行为。重载的运算符是名字为 \textbf{\texttt{operator}} 关键字后跟运算符的函数：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 Complex operator+(const Complex &lhs, double rhs) {
     return Complex(lhs.real + rhs, lhs.imag);
 }
@@ -197,12 +200,12 @@ Complex c2 = c1 + 3; // c2 == 4 + 2i
 这里通过重载加法运算符实现了复数和实数的加法运算。和重载函数类似，编译器会通过操作数的类型来匹配合适的运算符重载函数。
 
 对于自增和自减运算符，通过下面的方法来区分前缀和后缀版本：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 // 前缀版本
 char* operator++(char *p) {
     return p + 1;
 }
-// 后缀版本，多了一个不使用的 int 参数
+// 后缀版本，多了一个不使用的 ([int]) 参数
 char* operator++(char *p, int) {
     char *tmp = p;
     p += 1;
@@ -216,39 +219,39 @@ char* operator++(char *p, int) {
 \subsection{作用域和命名空间} \label{sec:scope}
 
 为了避免全局名字重复，我们一般会将全局对象的名字定义的比较长并且特殊，C++ 中引入了命名空间来缓解这种问题：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 namespace utils {
     int max(int a, int b);
 } // 命名空间结束不需要分号
 \end{lstlisting}
 命名空间可以在多处定义，加入上面的 \texttt{utils} 命名空间已经定义过，这里的定义会把 \texttt{max} 名字添加到现有的命名空间中。每个命名空间都是一个作用域，就像一个块或者函数一样。通过\textbf{作用域运算符 \texttt{::}} 可以访问命名空间内部的名字：
-\begin{lstlisting}[language=c++,numbers=none]
+\begin{lstlisting}[numbers=none]
 utils::max(1, 2);
 \end{lstlisting}
 作用域运算符在其他很多场合也有用，例如类或者结构体，和成员运算符 \texttt{.} 或者 \texttt{->} 不同，作用域运算符只能静态使用：
-\begin{lstlisting}[language=c++,numbers=none]
+\begin{lstlisting}[numbers=none]
 块名称 :: 属性名称
 \end{lstlisting}
 
 \subsection{初始化和赋值}
 
 定义变量时一般会给变量一个初始值，这个过程称为\textbf{初始化}：
-\begin{lstlisting}[language=c++]
-int n1 = 10;   // 使用 = 运算符初始化（不是赋值）
+\begin{lstlisting}
+int n1 = 10;   // 使用 ([=]) 运算符初始化（不是赋值）
 int n2(v - 1); // 通过构造函数初始化
-int n3();      // 使用默认构造函数初始化为 0
+int n3();      // 使用默认构造函数初始化为 ([0])
 \end{lstlisting}
 第一种初始化是和 C 语言相同的初始化方式，既使用 \texttt{=} 运算符初始化，后面两种则是 C++ 引入的初始化方式：通过构造函数初始化。构造函数将在 \ref{sec:constructor} 节介绍。这里要指出：所有内置类型都可以通过构造函数来初始化，也就是这种方式：
-\begin{lstlisting}[language=c++]
-int v1(), v2(1);      // 默认构造函数将 v1 初始化为 0
-bool b1(), b2(true);  // bool 类型的默认构造函数将 bool 对象初始化为 false
-bool b3 = bool(true); // 构造一个临时的 bool 对象初始化 b3
+\begin{lstlisting}
+int v1(), v2(1);      // 默认构造函数将 ([v1]) 初始化为 ([0])
+bool b1(), b2(true);  // bool 类型的默认构造函数将 ([bool]) 对象初始化为 ([false])
+bool b3 = bool(true); // 构造一个临时的 ([bool]) 对象初始化 ([b3])
 \end{lstlisting}
 
 除了初始化以外，使用\textbf{赋值运算符 \texttt{=}} 对变量进行\textbf{赋值}：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 n1 = 1;           // 使用字面量对变量赋值
-n1 = n2 = int(2); // n1 和 n2 都被赋值为 2
+n1 = n2 = int(2); // ([n1]) 和 ([n2]) 都被赋值为 ([2])
 \end{lstlisting}
 赋值运算符的左侧必须是变量，右侧为和左侧变量相同类型的表达式（或者可以隐式转换为相同类型），且赋值运算符是右结合的。
 
@@ -259,26 +262,26 @@ n1 = n2 = int(2); // n1 和 n2 都被赋值为 2
 \subsection{空指针}
 
 在 C 中我们经常使用 \texttt{NULL} 宏来表示空指针，在 C++ 中也能使用这个宏。不过如果我们去翻阅这个宏的实现，就会发现这个宏会针对 C 和 C++ 有不同的实现：
-\begin{lstlisting}[language=c++]
-// C 中的 NULL 宏定义
+\begin{lstlisting}
+// C 中的 ([NULL]) 宏定义
 #define NULL ((void*)0)
-// C++ 中的 NULL 宏定义
+// C++ 中的 ([NULL]) 宏定义
 #define NULL 0
 \end{lstlisting}
 可以看到，在 C 中，\texttt{NULL} 被定义成 \texttt{void} 型的空指针，但是 C++ 中 \texttt{void*} 指针\CJKunderdot{不能隐式转换成其他指针类型}（见文献 \cite{Lippman2013C} 第 4.11.2节）。而 C++ 中的整数 0 可以转换成任意指针类型，因此 C++ 中的 NULL 定义如第 4 行所示。
 
 由于 C++ 中的 \texttt{NULL} 就是整数 0，因此假设有以下重载函数调用：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 void print(int n);
 void print(char *s);
 print(NULL);
 \end{lstlisting}
 上面第 3 行的调用处会优先匹配第 1 行参数为 \texttt{int} 型的重载版本（写成 \texttt{NULL} 说明程序员实际想调用第 2 行的重载版本）。为了指定使用第二行的重载版本，我们实际上可以这样做：
-\begin{lstlisting}[language=c++,numbers=none]
-print((char*)0); // 将 0 强制转换成 char*，为什么不转换成 void* ？
+\begin{lstlisting}[numbers=none]
+print((char*)0); // 将 ([0]) 强制转换成 ([char*])，为什么不转换成 ([void*]) ？
 \end{lstlisting}
 在 C++11 中提供了 \texttt{nullptr} 关键字专门表示空指针，\texttt{nullptr} 可以转换为任何指针类型（指针的值是 0），因此也可以这样写：
-\begin{lstlisting}[language=c++,numbers=none,style=c++11]
+\begin{lstlisting}[numbers=none]
 print(nullptr);
 \end{lstlisting}
 
@@ -287,7 +290,7 @@ print(nullptr);
 \section{类}
 
 在 C 语言中，我们可以通过结构体定义数据类型，而 C++ 中则引入了 \textbf{类}。从实现上来看，一个类由若干数据成员和方法（用于操作数据成员的函数）构成，相比于 C 结构体，类具有\textbf{访问控制}功能。通过 \texttt{struct} 或者 \texttt{class} 关键字定义类。我们通过一个简单的例子进行说明：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 class Point {
 public:
     int x() { return _x; }
@@ -297,7 +300,7 @@ public:
 private:
     short _x, _y;
 };
-Point p;   // 定义 Point 对象 p
+Point p;   // 定义 ([Point]) 对象 ([p])
 p.setX(2); // 正确
 p._x = 3;  // 编译报错（私有成员在类外部不可见）
 \end{lstlisting}
@@ -312,7 +315,7 @@ p._x = 3;  // 编译报错（私有成员在类外部不可见）
 \subsection{成员函数（方法）}
 
 类的成员函数又称为\textbf{方法}，用于操作类的数据成员并负责接口实现。类的成员函数必须在类内部声明，正如 \texttt{Point} 类的哪些方法。我们还可以在类外面定义成员函数：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 class Point {
 public:
     int x();
@@ -325,7 +328,7 @@ int Point::x() { return _x; }
 \subsubsection{\texttt{this} 指针}
 
 类的实例指针通过一个名为 \textbf{\texttt{this}} 的隐式参数传递给成员函数以访问调用的对象。当我们调用 \texttt{p.setX(2)} 时，编译器会将对象 \texttt{p} 的地址通过 \texttt{this} 指针传递给 \texttt{setX}，从而访问数据成员 \texttt{\_x}，我们可以在成员函数中显示使用 \texttt{this} 指针：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 int Point::x() { return this->_x; }
 \end{lstlisting}
 一般可以像前面的例子一样隐式地使用用 \texttt{this} 指针，但如果类的成员和某些参数或者全局变量重名，\texttt{this} 指针会很有用。另外，\texttt{this} 是常量指针并总是指向当前对象，不能修改。
@@ -333,21 +336,21 @@ int Point::x() { return this->_x; }
 \texttt{const 成员函数}
 
 回想我们在 C 语言中定义的常量变量：
-\begin{lstlisting}[language=c++,numbers=none]
+\begin{lstlisting}[numbers=none]
 const int x = 1;
 \end{lstlisting}
 很显然不能在定义 \texttt{x} 变量之后修改它的值。现在我们看 C++ 的例子：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 int length(const Point &p) {
   return int(sqrt(p.x() * p.x() + p.y() * p.y()));
 }
 Point p;
 p.setX(3);
 p.setY(4);
-length(p); // 应该返回 5
+length(p); // 应该返回 ([5])
 \end{lstlisting}
 \texttt{length} 函数用于求二维向量的长度，这个函数不需要修改参数 \texttt{p} 的值（不修改它的数据成员），因此将参数 \texttt{p} 加上了 \texttt{const} 修饰。不过上面的代码编译会报错，原因在于：虽然 \texttt{Point::x()} 和 \texttt{Point::y()} 虽然事实上不修改 \texttt{Point} 对象的值，但是编译器并不知道。我们可以将上述成员函数的定义后加上 \texttt{const} 关键字以指出此成员函数不会修改对象（此时 \texttt{this} 指针是 \texttt{const Point* const} 类型）：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 class Point {
 public:
     int x() const { return _x; }
@@ -356,11 +359,11 @@ public:
 };
 \end{lstlisting}
 这种成员函数称为\textbf{常量成员函数}。如果可能，应尽量定义常量成员函数。类中相同名称的普通成员函数和常量成员函数可以重载：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 class Buffer {
 public:
-    char* data();             // 非常量成员函数的重载版本，可能会修改 Buffer 对象
-    const char* data() const; // 常量成员函数版本，不会修改 Buffer 对象
+    char* data();             // 非常量成员函数的重载版本，可能会修改 ([Buffer]) 对象
+    const char* data() const; // 常量成员函数版本，不会修改 ([Buffer]) 对象
     // ...
 };
 \end{lstlisting}
@@ -373,7 +376,7 @@ public:
 \subsubsection{定义构造函数}
 
 对于前面的 \texttt{Point}，我们将考虑两个重载版本：一个版本不接受任何参数，将点初始化 $(0,0)$；另一个版本接受一对 $(x,y)$ 值并初始化点：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 class Point {
 public:
     Point() { _x = 0; _y = 0; }
@@ -382,7 +385,7 @@ public:
 };
 \end{lstlisting}
 我们还可以使用构造函数的初始值列表直接初始化成员变量：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 class Point {
 public:
     Point() : _x(), _y() {}
@@ -399,7 +402,7 @@ public:
 \paragraph{拷贝构造函数}
 
 使用一个对象来\CJKunderdot{初始化}另一个同类对象时会调用拷贝构造函数执行初始化，如果没有显式定义，编译器会生成默认的拷贝构造函数（依次拷贝所有成员）。拷贝构造函数的参数是一个相同类型的对象或者引用：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 class Point {
 public:
     Point(const Point &point) : _x(point._x), _y(point._y) {}
@@ -411,7 +414,7 @@ public:
 \subsubsection{析构函数}
 
 当对象的生命周期结束时会调用类的\textbf{析构函数}以执行自定义的销毁动作，对于 \texttt{Point} 类来说，使用编译器生成的默认析构函数就可以了（什么也不做）。但是假设我们实现了一个 \texttt{File} 类，我们应该在析构函数中关闭文件句柄。析构函数的定义如下：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 class File {
 public:
     ~File() { if (!isOpened()) fclose(_fp); }
@@ -425,7 +428,7 @@ private:
 \subsection{运算符重载}
 
 和 \ref{sec:overloaded_operator} 节类似，我们可以将运算符重载函数作为类的成员函数，不过需要省略第一个操作数参数（第一个操作数为对象本身）：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 class Point {
 public:
     Point operator+(const Point &rhs) { return Point(_x + rhs._x, _y + rhs.y); }
@@ -433,12 +436,12 @@ public:
 };
 \end{lstlisting}
 这样就可以使用加法运算符计算两个 \texttt{Point} 对象的向量和了：
-\begin{lstlisting}[language=c++,numbers=none]
-Point p = Point(1, 2) + Point(3, 4); // p == Point(4, 6)
+\begin{lstlisting}[numbers=none]
+Point p = Point(1, 2) + Point(3, 4); // ([p == Point(4, 6)])
 \end{lstlisting}
 
 当然，我们也可以在类外部重载运算符，就和 \ref{sec:overloaded_operator} 节一样：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 Point operator+(const Point &lhs， const Point &rhs) {
     return Point(lhs.x() + rhs.x(), lhs.y() + rhs.y());
 }
@@ -448,7 +451,7 @@ Point operator+(const Point &lhs， const Point &rhs) {
 \paragraph{赋值运算符}
 
 可以通过定义赋值运算符重载函数来替换编译器实现的默认版本：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 class Point {
 public:
     Point& operator=(const Point &rhs) {
@@ -464,7 +467,7 @@ public:
 \subsection{静态成员}
 
 有时候我们希望类的所有对象能够访问一个共同的对象，例如某个日志类需要一个全局的输出文件流，一般我们可以使用全局变量或者源文件内的静态变量来存储这个公用的文件流句柄，不过在 C++ 中我们还可以使用类的静态成员。在类中使用 \texttt{static} 关键字声明静态成员：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 class Logger {
 public:
     Logger();
@@ -480,17 +483,17 @@ private:
 \paragraph{访问静态成员}
 
 通过作用域运算符 \texttt{::} 可以直接访问类的静态成员：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 FILE *s = Logger::stream();
 Logger::set_stream(stdout);
 \end{lstlisting}
 对类的对象使用成员访问运算符也可以访问静态成员：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 Logger log;
 FILE *s = log.stream();
 \end{lstlisting}
 在类的内部不使用作用域运算符就能直接使用静态成员：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 Logger Logger::operator<<(int n) {
     fprintf(stream(), "%d", n); // 成员函数可以直接访问静态成员
     return *this;
@@ -500,7 +503,7 @@ Logger Logger::operator<<(int n) {
 \paragraph{定义静态成员}
 
 一般在类外部定义静态成员：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 FILE* Logger::ss = nullptr;        // 通常在类外部定义静态成员变量
 void Logger::set_stream(FILE *s) { // 定义静态成员函数
     ss = s;
@@ -528,32 +531,32 @@ void Logger::set_stream(FILE *s) { // 定义静态成员函数
 \subsubsection{分配动态内存}
 
 使用 \textbf{\texttt{new}} 运算符从堆上为对象分配内存空间并返回对象的指针：
-\begin{lstlisting}[language=c++,numbers=none]
+\begin{lstlisting}[numbers=none]
 int *p = new int; // p 指向一个未初始化的 int 对象
 \end{lstlisting}
 在不使用构造函数的情况下，\texttt{new} 生成的对象是默认初始化的（\ref{sec:default_init} 节），因此内置类型的值是未定义的，而类对象由默认构造函数初始化。我们还可以通过构造函数来初始化对象：
-\begin{lstlisting}[language=c++]
-int *i1 = new int();                       // *i1 == 0
-int *i2 = new int(2);                      // *i2 == 2
-std::string *s = new std::string("hello"); // *s == "hello"
+\begin{lstlisting}
+int *i1 = new int();                       // ([*i1 == 0])
+int *i2 = new int(2);                      // ([*i2 == 2])
+std::string *s = new std::string("hello"); // ([*s == "hello"])
 \end{lstlisting}
 还可以使用 \texttt{new} 运算符分配一个数组：
-\begin{lstlisting}[language=c++]
-int *i = new int[10];                      // 分配 10 个未初始化的 int 对象
-int *i = new int[10]();                    // 分配 10 个未初始化为 0 的 int 对象
+\begin{lstlisting}
+int *i = new int[10];                      // 分配 10 个未初始化的 ([int]) 对象
+int *i = new int[10]();                    // 分配 10 个未初始化为 ([0]) 的 ([int]) 对象
 \end{lstlisting}
 
 就像使用 \texttt{malloc} 一样，\texttt{new} 运算符一样可能出现内存不够导致无法分配的错误。一般情况下，\texttt{new} 在内存分配失败时会抛出一个 \texttt{std::bad\_alloc} 异常，如果不希望抛出异常，可以使用下面版本：
-\begin{lstlisting}[language=c++,numbers=none]
+\begin{lstlisting}[numbers=none]
 int *i = new (std::nothrow) int;           // 如果分配失败就返回一个空指针
 \end{lstlisting}
 
 \subsubsection{释放动态内存}
 
 动态分配的内存在使用结束后应当释放，以免内存耗尽。通过 \textbf{\texttt{delete}} 表达式释放动态分配的内存：
-\begin{lstlisting}[language=c++,numbers=none]
-delete po;                                // po 指向由 new 分配的对象
-delete[] pa;                              // pa 指向由 new 分配的数组
+\begin{lstlisting}[numbers=none]
+delete po;                                // ([po]) 指向由 ([new]) 分配的对象
+delete[] pa;                              // ([pa]) 指向由 ([new]) 分配的数组
 \end{lstlisting}
 \texttt{delete} 表达式会调用析构函数并释放对象使用的内存。\texttt{delete} 运算符后面必须跟一个由 \texttt{new} 分配的对象或数组的指针。如果不是指针类型，\texttt{delete} 表达式会产生编译错误，如果指针不是由 \texttt{new} 运算符分配的内存则会产生运行错误或者隐患。
 
@@ -568,20 +571,20 @@ C++11 标准中引入了\textbf{智能指针}类，这种类可以自动管理�
 \subsubsection{初始化和使用}
 
 这样定义和初始化 \texttt{shared\_ptr} 对象：
-\begin{lstlisting}[language=c++]
-std::shared_ptr<int> p1;            // 指向 int 的 shared_ptr（类似 int*）
-std::shared_ptr<myclass> p2;        // 指向 myclass 的 shared_ptr（类似 myclass*）
-std::shared_ptr<int> p3(new int()); // 使用 int* 初始化 p3
+\begin{lstlisting}
+std::shared_ptr<int> p1;            // 指向 ([int]) 的 ([shared\_ptr])（类似 ([int*])）
+std::shared_ptr<myclass> p2;        // 指向 ([myclass]) 的 ([shared\_ptr])（类似 ([myclass*])）
+std::shared_ptr<int> p3(new int()); // 使用 ([int*]) 初始化 ([p3])
 \end{lstlisting}
 默认初始化的 \texttt{shared\_ptr} 为空指针，可以使用动态分配的指针初始化 \texttt{shared\_ptr}。需要注意的是，无法通过普通指针隐式转换为 \texttt{shared\_ptr}：
-\begin{lstlisting}[language=c++]
-std::shared_ptr<int> p1(new int());  // 正确，显示地从 int* 构造 
-std::shared_ptr<int> p2 = new int(); // 错误，无法使用隐式转化shared_ptr<int>
+\begin{lstlisting}
+std::shared_ptr<int> p1(new int());  // 正确，显示地从 ([int*]) 构造 
+std::shared_ptr<int> p2 = new int(); // 错误，无法使用隐式转化 ([shared\_ptr<int>])
 \end{lstlisting}
 
 \texttt{shared\_ptr} 的使用方式和普通指针相似：
-\begin{lstlisting}[language=c++]
-if (p1 && *p1 != 0) { // p1 不为空且 p1 指向的 int 值不为 0
+\begin{lstlisting}
+if (p1 && *p1 != 0) { // ([p1]) 不为空且 ([p1]) 指向的 ([int]) 值不为 ([0])
     printf("valid data: %d\n", *p1);
 }
 \end{lstlisting}
@@ -589,23 +592,23 @@ if (p1 && *p1 != 0) { // p1 不为空且 p1 指向的 int 值不为 0
 \paragraph{\texttt{make\_shared()} 函数}
 
 这是更推荐使用的 \texttt{shared\_ptr} 的初始化方式，此函数会在动态内存上构造目标对象并返回指向此对象的 \texttt{shared\_ptr}（只分配一次内存）。\texttt{shared\_ptr} 是一个模板函数，它的模板参数是对象的类型：
-\begin{lstlisting}[language=c++,numbers=none]
-std::shared_ptr<int> p1 = make_shared<int>(2); // p1 指向值为 2 的 int 对象
+\begin{lstlisting}[numbers=none]
+std::shared_ptr<int> p1 = make_shared<int>(2); // ([p1]) 指向值为 ([2]) 的 ([int]) 对象
 \end{lstlisting}
 
 \subsubsection{拷贝和赋值和析构}
 
 对 \texttt{shared\_ptr} 进行拷贝或赋值时，它会记录还有多少 \texttt{shared\_ptr} 指向此对象，也就是会维护对象的 \textbf{引用计数}，例如：
-\begin{lstlisting}[language=c++,numbers=none]
-std::shared_ptr<int> p1 = make_shared<int>(); // p1 指向一个 int* 对象
-std::shared_ptr<int> p2 = p1; // p2 和 p1 指向同一个对象，那么这个对象的引用计数为 2
+\begin{lstlisting}[numbers=none]
+std::shared_ptr<int> p1 = make_shared<int>(); // ([p1]) 指向一个 ([int*]) 对象
+std::shared_ptr<int> p2 = p1; // ([p2]) 和 ([p1]) 指向同一个对象，那么这个对象的引用计数为 2
 \end{lstlisting}
 
 一旦某个对象的引用计数变成 0，就会自动析构对象并回收内存：
-\begin{lstlisting}[language=c++,numbers=none]
-std::shared_ptr<int> p = make_shared<int>(); // p 指向一个 int* 对象，此对象的引用计数为 1
-p = std::shared_ptr<int>(); // 使用空指针给 p 赋值，因而 p 不再引用原先的对象，
-                            // 该对象的引用计数递减（变成 0）
+\begin{lstlisting}[numbers=none]
+std::shared_ptr<int> p = make_shared<int>(); // ([p]) 指向一个 ([int*]) 对象，此对象的引用计数为 ([1])
+p = std::shared_ptr<int>(); // 使用空指针给 ([p]) 赋值，因而 ([p]) 不再引用原先的对象，
+                            // 该对象的引用计数递减（变成 ([0])）
 \end{lstlisting}
 执行完第 2 行之后，原来对象的引用计数被清零，也就是没有任何 \texttt{shared\_ptr} 引用它，此时会自动析构并释放这个 \texttt{int} 对象。
 
@@ -624,7 +627,7 @@ p = std::shared_ptr<int>(); // 使用空指针给 p 赋值，因而 p 不再引�
 \subsection{RAII 机制}
 
 假设我们针对某种操作系统封装了一个互斥量类：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 class Mutex {
 public:
     Mutex();
@@ -633,7 +636,7 @@ public:
 };
 \end{lstlisting}
 互斥量用于保证多个线程安全地访问共享资源，在每个线程访问全局资源前要通过 \texttt{lock} 方法锁住互斥量，而访问结束后通过 \texttt{unlock} 解锁互斥量：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 Mutex g_mutex;
 // 这个函数可能在多个线程中执行
 bool some_func() {
@@ -649,7 +652,7 @@ bool some_func() {
   \item 栈上定义的对象在初始化时调用构造函数，离开作用域（当前块）时销毁。
 \end{itemize}
 利用这一点我们可以实现\textbf{资源获取既初始化}（\textbf{RAII}）。我们来看怎样修改 \texttt{Mutex} 的使用方式：
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}
 class MutexLocker {
 public:
     // 构造函数调用时锁住互斥量
@@ -662,9 +665,9 @@ private:
 Mutex g_mutex;
 // 这个函数可能在多个线程中执行
 bool some_func() {
-    MutexLocker locker(g_mutex); // 初始化时会调用 MutexLocker 的构造函数锁住 g_mutex
+    MutexLocker locker(g_mutex); // 初始化时会调用 ([MutexLocker]) 的构造函数锁住 ([g\_mutex])
     // 执行访问全局资源的逻辑
-    // 函数作用域结束时（在这里是复函数返回）解锁 g_mutex
+    // 函数作用域结束时（在这里是复函数返回）解锁 ([g\_mutex])
     return true;
 }
 \end{lstlisting}
